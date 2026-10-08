@@ -3,80 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Opening Link...</title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>Please wait...</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
       margin: 0;
-      background: #0d1117;
-      color: #c9d1d9;
+      background: #0e1117;
+      color: #e6edf3;
       text-align: center;
       padding: 20px;
     }
     .spinner {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border: 4px solid #30363d;
-      border-top: 4px solid #58a6ff;
+      border-top: 4px solid #388bfd;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    a.btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 24px;
+    .btn {
+      display: none;
+      margin-top: 15px;
+      padding: 12px 26px;
       background: #238636;
-      color: #ffffff;
+      color: #fff;
       text-decoration: none;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="spinner"></div>
-  <h2>Opening in browser...</h2>
-  <p>If you are not redirected automatically, tap the button below:</p>
-  <a id="fallback-btn" class="btn" href="#">Continue</a>
+  <div id="loader" class="spinner"></div>
+  <h3 id="msg">Loading profile...</h3>
+  <a id="btn" class="btn" href="#">Continue to Page</a>
 
   <script>
-    // 1. ADD ALL YOUR LINKS HERE:
-    // "key": "destination URL"
-    const linkMap = {
-      "shruti": "https://www.creatorfarm.in/darlingshruti",
-      // You can add more keys here anytime, e.g.:
-      // "of": "https://onlyfans.com/yourpage",
-      // "store": "https://yourstore.com"
-    };
+    (function() {
+      const ua = (navigator.userAgent || navigator.vendor || window.opera || "").toLowerCase();
 
-    // 2. Read the parameter ?to=... from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const key = urlParams.get("to");
+      // 1. KNOWN META / SOCIAL CRAWLER SIGNATURES
+      const isBot = /facebookexternalhit|facebot|meta-externalagent|meta-webindexer|meta-externalads|instagram|threads|bytespider|twitterbot|whatsapp|telegrambot|googlebot|bingbot/i.test(ua);
 
-    // Match link or use default
-    const targetUrl = linkMap[key] || "https://www.creatorfarm.in/darlingshruti";
+      // If it's a server scraper or preview bot, trap it here.
+      // It will only see this decoy screen and never discover the real URL.
+      if (isBot && !/iphone|ipad|ipod|android/i.test(ua)) {
+        document.getElementById("msg").innerText = "Content Unavailable";
+        document.getElementById("loader").style.display = "none";
+        return;
+      }
 
-    // Set fallback button link
-    const fallbackBtn = document.getElementById("fallback-btn");
-    fallbackBtn.href = targetUrl;
+      // 2. OBFUSCATED URLS (Base64 encoded so raw string scanners can't see the domain)
+      // "aHR0cHM6Ly93d3cuY3JlYXRvcmZhcm0uaW4vZGFybGluZ3NocnV0aQ==" = https://www.creatorfarm.in/darlingshruti
+      const vault = {
+        "shruti": "aHR0cHM6Ly93d3cuY3JlYXRvcmZhcm0uaW4vZGFybGluZ3NocnV0aQ=="
+        // Add more base64 encoded links here in the future
+      };
 
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
-    const cleanUrl = targetUrl.replace(/^https?:\/\//, "");
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get("to");
+      const encodedTarget = vault[key] || vault["shruti"];
+      const targetUrl = atob(encodedTarget); // Decodes at runtime in the browser
 
-    // 3. Force Android Chrome Intent Escape
-    if (/android/i.test(ua)) {
-      window.location.href = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.android.chrome;end";
-    } else {
-      // 4. iOS / Desktop fallback
-      window.location.href = targetUrl;
-    }
+      const btn = document.getElementById("btn");
+      btn.href = targetUrl;
+
+      // 3. HUMAN TIMEOUT & REDIRECT
+      setTimeout(function() {
+        // Show fallback button for real users if redirect gets delayed
+        btn.style.display = "inline-block";
+
+        if (/android/i.test(ua)) {
+          const clean = targetUrl.replace(/^https?:\/\//, "");
+          window.location.href = "intent://" + clean + "#Intent;scheme=https;package=com.android.chrome;end";
+        } else {
+          window.location.href = targetUrl;
+        }
+      }, 350); // 350ms delay blocks instantaneous automated headless scripts
+    })();
   </script>
 </body>
 </html>
